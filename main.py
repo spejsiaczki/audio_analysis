@@ -20,7 +20,7 @@ def analyze_file(path: str):
     # Apply Short-Time Fourier Transform (STFT)
     frequencies, times, Zxx = signal.stft(
         data, fs=sample_rate, nperseg=1024, noverlap=512, window='hann')
-
+    
     # Calculate the magnitude (absolute value) and convert to decibels (dB)
     magnitude = np.abs(Zxx)
     # Add a small constant to avoid log(0)
@@ -36,8 +36,9 @@ def analyze_file(path: str):
     frequencies = frequencies[freq_limit_idx]
     magnitude_db = magnitude_db[freq_limit_idx, :]
 
+    REPEAT_MIN_TIME = 0.28
     DISTANCE_THRESH = 100
-    FRAMES_THRESH = 25
+    FRAMES_THRESH = REPEAT_MIN_TIME * sample_rate / 512
     current_frames = 0
     repeated = False
     last_in_thresh = False
@@ -66,8 +67,9 @@ def analyze_file(path: str):
             repeat_start_time = times[i]
 
     # detect long silence
+    SILENCE_MIN_TIME = 0.33
     SILENCE_THRESH = 20
-    SILENCE_FRAMES_THRESH = 30
+    SILENCE_FRAMES_THRESH = SILENCE_MIN_TIME * sample_rate / 512
     FINAL_DEADZONE = 2.0
     magnitude_db[:, np.max(magnitude_db, axis=0) < SILENCE_THRESH] = -60
     silence_frames = 0
