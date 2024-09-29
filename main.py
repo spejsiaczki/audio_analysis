@@ -3,6 +3,9 @@ import scipy.io.wavfile as wav
 import scipy.signal as signal
 import argparse
 import json
+import pyloudnorm as pyln
+from loud_detect import detect_loudness_start
+
 
 
 def analyze_file(path: str):
@@ -98,15 +101,17 @@ def analyze_file(path: str):
         elif silence_start_time == 0.0:
             silence_start_time = times[i]
 
-    return repeating_sound, long_silence
+    loud_moments = detect_loudness_start(data, sample_rate)
+    return repeating_sound, long_silence, loud_moments
 
 
 def main(args):
-    repeating_sound, long_silence = analyze_file(args.input)
+    repeating_sound, long_silence, loud_moments = analyze_file(args.input)
     with open(args.output, 'w') as f:
         json.dump({
             'repeating_sound': repeating_sound,
-            'long_silence': long_silence
+            'long_silence': long_silence,
+            'loud_moments': loud_moments
         }, f)
 
 
