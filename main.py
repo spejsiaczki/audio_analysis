@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.io.wavfile as wav
 import scipy.signal as signal
-# import matplotlib.pyplot as plt
 import argparse
 import json
 
@@ -84,23 +83,24 @@ def analyze_file(path: str):
             silence_frames = max(silence_frames-1, 0)
 
         if silence_frames > SILENCE_FRAMES_THRESH:
+            if times[-1] - times[i] < FINAL_DEADZONE:
+                break
             silence_repeat = True
             silence_last_time = times[i]
         if silence_frames < SILENCE_FRAMES_THRESH//2:
             if silence_repeat:
-                if times[-1] - silence_last_time < FINAL_DEADZONE:
-                    break
                 long_silence.append((silence_start_time, silence_last_time))
                 silence_repeat = False
                 silence_frames = 0
             silence_start_time = 0.0
+        elif silence_start_time == 0.0:
+            silence_start_time = times[i]
 
     return repeating_sound, long_silence
 
 
 def main(args):
     repeating_sound, long_silence = analyze_file(args.input)
-
     with open(args.output, 'w') as f:
         json.dump({
             'repeating_sound': repeating_sound,
